@@ -5,47 +5,48 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <title>BT1</title>
+    <title>BT2</title>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 <body style = "background-color: black;">
-    <h1 style = "color:white;text-align: center;">GIPHY PARTY</h1>
-    <div style = "text-align: center;">
-        <input class = "form-control" style = "width: 150px;display: inline-block;" name = "search">
-        <button onclick = "query()" class = "btn btn-success" style = "width: 150px;">Search GIPHY!</button>
-        <button onclick = "remove()" class = "btn btn-warning" style = "width: 150px">Remove Images</button>
+    <h1 style = "color:white;text-align: center;">WEATHER DATA</h1>
+    <div>
+
     </div>
     <div id = 'main' style = "text-align: center;"></div>
     <script>
-        const search = document.querySelector("[name='search']")
         const main = document.querySelector("#main")
-        function query() {
-            axios.get(`http://api.giphy.com/v1/gifs/search?q=${search.value}&api_key=aRBcFpLxmmoA70qY07KbmQ9iM2PzA6Iw`)
+        var cityname = ["Hồ Chí Minh","Hà Nội","Đà Nẵng","Nha Trang","Cần Thơ"]
+        cityname.forEach((item,index) => {
+            get_data(item)
+        })
+        function get_data(cityname) {
+            axios.get(`http://api.openweathermap.org/geo/1.0/direct?q=${cityname}&limit=1&appid=418d123a8a610f690bbd1cdff706380b`)
             .then(function (res) {
-                console.log("ok la")
-                console.log(res.status)
-                console.log(res)
-                if (res.status == 200) {
-                    const data = res.data.data
-                    console.log(data)
-                    for (var i = 0; i < data.length;i++) {
-                        const new_elm = document.createElement("img")
-                        new_elm.src = "https://i.giphy.com/media/" + data[i].id + "/giphy-preview.gif"
-                        new_elm.width = 200
-                        new_elm.style.margin = "10px" 
-                        main.appendChild(new_elm)
-                    }
-                }
+                const data = res.data
+                console.log(data)
+                axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${data[0]['lat']}&lon=${data[0]['lon']}&appid=418d123a8a610f690bbd1cdff706380b`)
+                .then(function (res) {
+                    console.log(res.data)
+                    const data = res.data
+                    const new_elm = document.createElement("div")
+                    new_elm.innerHTML = `<ul>
+                        <li><b>Name:</b> ${cityname}</li>
+                        <li><b>Weather:</b> ${data['weather'][0]['main']}</li>
+                        <li><b>Description:</b> ${data['weather'][0]['description']}</li>
+                        <li><b>Humidity:</b> ${data['main']['humidity']}</li>
+                        <li><b>Temperature:</b> ${data['main']['temp']}</li>
+                        <li><b>Pressure:</b> ${data['main']['pressure']}</li>
+                        <li><b>Wind:</b> ${data['wind']['deg']}/${data['wind']['speed']}</li>
+                    </ul>
+                    `
+                    new_elm.style = "display: inline-block;width: 300px;background-color: silver;margin: 15px;text-align:left"
+                    main.append(new_elm)
+                })
             })
-            .catch(function (error) {
-                console.log("lỗi gì đó")
-            })
-        }
-        function remove() {
-            main.innerHTML = ""
         }
     </script>
 </body>
