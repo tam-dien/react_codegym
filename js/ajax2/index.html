@@ -25,7 +25,7 @@
         })
         function get_data(cityname) {
             axios.get(`http://api.openweathermap.org/geo/1.0/direct?q=${cityname}&limit=1&appid=418d123a8a610f690bbd1cdff706380b`)
-            .then(function (res) {
+            .then(function (res) { nhỉ  
                 const data = res.data
                 console.log(data)
                 axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${data[0]['lat']}&lon=${data[0]['lon']}&appid=418d123a8a610f690bbd1cdff706380b`)
