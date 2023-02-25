@@ -67,7 +67,6 @@ class App extends Component {
       isValid = false
     }
     studentList.splice(index,1)
-    console.log(studentList)
     this.setState({
       form: form,
       studentList: studentList,
