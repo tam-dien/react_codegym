@@ -36,7 +36,7 @@ function App() {
   }
 
   function handleSubmit() {
-    alert("Send infomation success!!!");
+    alert("Send infomation successfully!!!");
   }
   return (
     <Formik
