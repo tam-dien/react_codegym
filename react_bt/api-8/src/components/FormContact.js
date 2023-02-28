@@ -11,12 +11,12 @@ function FormContact(props) {
     }
     function handleSubmit() {
         setForm({name:"hi"})
-        // if (form.name && form.email && form.phone) {
-        //     alert(`${(id) ? "Edit" : "Add" } contact sucessfully`)
-        //     navigate("/")
-        // } else {
-        //     alert("Điền đầy đủ thông tin")
-        // }
+        if (form.name && form.email && form.phone) {
+            alert(`${(id) ? "Edit" : "Add" } contact sucessfully`)
+            navigate("/")
+        } else {
+            alert("Điền đầy đủ thông tin")
+        }
     }
     function handleImage(e) {
         const photo = e.target.files[0]
@@ -25,10 +25,7 @@ function FormContact(props) {
         axios
             .post("https://v2.convertapi.com/upload", formData)
             .then(res => {
-                console.log(res.data.Url);
-                form.image = res.data.Url
-                setForm(form)
-                console.log(form)
+                setForm({...form,image:res.data.Url})
             })
             .catch(err => {
                 console.log(err);
