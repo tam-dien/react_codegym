@@ -1,0 +1,1 @@
+export const WebSocket_URL = "ws://localhost:8765/"

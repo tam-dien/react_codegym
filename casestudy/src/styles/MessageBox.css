@@ -1,0 +1,40 @@
+.message-box {
+    height: 100%;
+    padding: 10px;
+}
+
+.messages {
+    height: calc(100% - 40px);
+    border: 1px solid rgb(153, 153, 255);
+    border-radius: 10px;
+    background-color: rgb(208, 255, 255);
+    overflow-y: auto;
+}
+
+.message {
+    padding: 5px;
+    border-radius: 5px;
+    margin: 5px;
+    color: white;
+    width: fit-content;
+    max-width: 95%;
+    word-wrap: break-word
+}
+
+.message-box-outside {
+    overflow: auto;
+}
+
+.message.left {
+    float: left;
+    background-color: rgb(42, 42, 138);
+}
+
+.message.right {
+    float: right;
+    background-color: rgb(74, 74, 179);
+}
+
+.TypeMessage {
+    margin-top: 10px;
+}
