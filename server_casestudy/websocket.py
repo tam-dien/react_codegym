@@ -3,6 +3,9 @@ import websockets
 import json
 import random
 
+import os
+import django
+
 sender = 0
 
 CONNECTIONS_client = []
@@ -16,18 +19,21 @@ async def handleClient(websocket,ws_id):
     except websockets.exceptions.ConnectionClosed:
         for i in CONNECTIONS_client:
             if i[1] == websocket:
+                i[0].activate = False
+                i[0].save()
                 CONNECTIONS_client.remove(i)
                 return
         return
     data = json.loads(data)
-    mess = data['mess']
-    mess_id = random.randint(1,10000)
-    L_conversation[int(ws_id)].append({
-        "sender":0,
-        "mess":mess,
+    cover = Coversation(mess=data['mess'],client=ws_id,sender=data['sender'])
+    cover.save()
+    mess_id = cover.id
+    await websocket.send(json.dumps({
+        "type":"response",
         "id":mess_id,
-    })
+    }))
     data_send = json.dumps({
+            "type":"send",
             "sender":ws_id,
             "mess":data['mess'],
             "id":mess_id
@@ -71,16 +77,20 @@ async def server(websocket):
     data = await websocket.recv()
     data = json.loads(data)
     if data["type"] == "client":
-        CONNECTIONS_client.append([data["id"],websocket])
-        L_conversation[int(data["id"])] = []
+        c = Client()
+        await sync_to_async(c.save)()
+        print(c.id)
+        CONNECTIONS_client.append([c,websocket])
+        await websocket.send(json.dumps({"id":c.id}))
         for ws_ad in CONNECTIONS_admin:
             print("gửi data cho admin",ws_ad[0])
             await ws_ad[1].send(json.dumps({
                 "new_customer":True,
-                "id":data['id'],
+                "id":c.id,
+                "time":c.client_id.timestamp()*1000,
             })) 
         while True:
-            await handleClient(websocket,data["id"])
+            await handleClient(websocket,c.id)
     if data["type"] == "admin":
         while True:
             try:
@@ -88,10 +98,8 @@ async def server(websocket):
             except websockets.exceptions.ConnectionClosed:
                 return
             data = json.loads(data)
-            print(data)
-            username = data['username']
-            password = data['password']
-            if username == "ntd" and password == "123":
+            user = await sync_to_async(lambda :authenticate(username=data['username'], password=data['password']))()
+            if user:
                 await websocket.send(json.dumps({
                     "success":True,
                     "token":"bolumbola"
@@ -110,4 +118,9 @@ async def main():
         await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server_casestudy.settings")
+    django.setup()
+    from django.contrib.auth import authenticate
+    from index.models import *
+    from asgiref.sync import sync_to_async
     asyncio.run(main())

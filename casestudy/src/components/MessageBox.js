@@ -10,6 +10,7 @@ function MessageBox(props) {
     }
     function handleSubmit(e) {
         e.preventDefault()
+        setMessage("")
         send(message)
     }
     return (
@@ -19,7 +20,7 @@ function MessageBox(props) {
             </div>
             <div className="TypeMessage">
                 <form>
-                    <input className="form-control" onChange={handleChange} style={{width:"calc(100% - 61.15px)",display:"inline-block"}} />
+                    <input className="form-control" value={message} onChange={handleChange} style={{width:"calc(100% - 61.15px)",display:"inline-block"}} />
                     <button className="btn btn-primary" onClick={handleSubmit}>Send</button>
                 </form>
             </div>

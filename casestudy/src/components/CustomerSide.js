@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import MessageBox from "./MessageBox"
 import { WebSocket_URL } from "../CONST"
+import Loading from "./Loading"
 
 var websocket = null
 var id_client = null
@@ -9,28 +10,31 @@ var sender = null
 
 function CustomerSide() {
     const [ messageList, setMessageList ] = useState([])
-    if (websocket) websocket.onmessage = (event) => {
+    const [ idClient, setIdClient ] = useState(null)
+    if (id_client) websocket.onmessage = (event) => {
         var data = event.data
         data = JSON.parse(data)
-        if (data.first) {
-            sender = data.sender
-            return
-        }
         const newMessageList = [...messageList]
         newMessageList.push({...data,sender:1})
         setMessageList(newMessageList)
     }
     useEffect(()=>{
-        websocket = new WebSocket(WebSocket_URL)
-        websocket.onopen = (event) => {
-            const d = new Date()
-            id_client = d.getTime()
-            websocket.send(JSON.stringify({
-                id:id_client,
-                type:"client",
-            }))
-        }
-        setMessageList([])
+        const try_connect = setInterval(()=>{
+            if (!websocket || websocket.readyState == 0) {
+                websocket = new WebSocket(WebSocket_URL)
+                websocket.onopen = (event) => {
+                    clearInterval(try_connect)
+                    websocket.send(JSON.stringify({
+                        type:"client",
+                    }))
+                    websocket.onmessage = (event) => {
+                        var data = event.data
+                        data = JSON.parse(data)
+                        setIdClient(data.id)
+                    }
+                }
+            }
+        },1000)
     },[])
     function send(data) {
         websocket.send(JSON.stringify({
@@ -44,9 +48,12 @@ function CustomerSide() {
         })
         setMessageList(newMessageList)
     }
+    console.log(idClient)
     return (
         <div style={{height:"100vh"}}>
-            <MessageBox message_list={messageList} send={send} />
+            {( idClient == null ) 
+            ? <Loading />
+            : <MessageBox message_list={messageList} send={send} />}
         </div>
     )
 }

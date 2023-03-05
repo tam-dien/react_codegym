@@ -8,9 +8,9 @@ function CustomerList(props) {
     return (
         <div className="customer-list">
             {messageListCustomers.map(c=>(
-                <div className={"customer-box " + ((customerSelected===c.id)?"active":"")} customer-id={c.id} onClick={handleClick}>
-                    <h4 customer-id={c.id}>{c.id}</h4>
-                    <p customer-id={c.id}>{c.messageList[c.messageList.length-1].mess}</p>
+                <div className={"customer-box " + ((customerSelected==c.id)?"active":"")} customer-id={c.id} onClick={handleClick}>
+                    <h5 customer-id={c.id}>{new Date(parseInt(c.id)).toLocaleString()}</h5>
+                    <p customer-id={c.id}>{(c.messageList[c.messageList.length-1] !== undefined) ? c.messageList[c.messageList.length-1].mess : ""}</p>
                 </div>
             ))}
         </div>
