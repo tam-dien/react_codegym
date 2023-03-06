@@ -3,7 +3,7 @@ import Message from "./Message"
 import {useState} from "react"
 
 function MessageBox(props) {
-    const { message_list, send } = props
+    const { message_list, send, admin } = props
     const [ message, setMessage ] = useState("") 
     function handleChange(e) {
         setMessage(e.target.value)
@@ -16,7 +16,7 @@ function MessageBox(props) {
     return (
         <div className="message-box">
             <div className="messages">
-                {message_list.map(m=><Message key={m.id} message={m} />)}
+                {message_list.map(m=><Message admin={admin} key={m.id} message={m} />)}
             </div>
             <div className="TypeMessage">
                 <form>
@@ -26,6 +26,10 @@ function MessageBox(props) {
             </div>
         </div>
     )
+}
+
+MessageBox.defautProps = {
+    admin:false
 }
 
 export default MessageBox

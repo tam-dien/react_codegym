@@ -4,6 +4,7 @@ import MessageBox from "./MessageBox"
 import { WebSocket_URL } from "../CONST"
 import CustomerList from "./CustomerList"
 import Login from "./Login"
+import Loading from "./Loading"
 
 var websocket = null
 var id_client = null
@@ -24,16 +25,17 @@ function AdminSide() {
     const [ messageListCustomers, setMessageListCustomers ] = useState([])
     const [ customerSelected, setCustomerSelected ] = useState(null)
     const [ admin, setAdmin ] = useState(null)
+    const [ loading, setLoading ] = useState(true)
     const indexCustomerSelected = messageListCustomers.findIndex(x=>x.id==customerSelected)
-    console.log(customerSelected)
     if (websocket && admin) {websocket.onmessage = (event) => {
         var data = event.data
         data = JSON.parse(data)
         if (data.new_customer) {
             const newMessageListCustomers = [...messageListCustomers]
-            newMessageListCustomers.push({
+            newMessageListCustomers.unshift({
                 id:data.id,
-                messageList:[]
+                client_id:data.client_id,
+                messageList:[],
             })
             setMessageListCustomers(newMessageListCustomers)
             console.log(newMessageListCustomers)
@@ -49,17 +51,18 @@ function AdminSide() {
         setMessageListCustomers(newMessageListCustomers)
     }}
     useEffect(()=>{
-        websocket = new WebSocket(WebSocket_URL)
-        websocket.onopen = (event) => {
-            const d = new Date()
-            id_client = d.getTime()
-            websocket.send(JSON.stringify({
-                id:id_client,
-                type:"admin",
-            }))
-            setMessageListCustomers(fake_data)
-            setCustomerSelected("123456")
-        }
+        const try_connect = setInterval(()=>{
+            if (!websocket || websocket.readyState == 0) {
+                websocket = new WebSocket(WebSocket_URL)
+                websocket.onopen = (event) => {
+                    clearInterval(try_connect)
+                    websocket.send(JSON.stringify({
+                        type:"admin",
+                    }))
+                    setLoading(false)
+                }
+            }
+        },1000)
     },[])
     function send(data) {
         websocket.send(JSON.stringify({
@@ -80,7 +83,6 @@ function AdminSide() {
         setCustomerSelected(customerID)
     }
     function sendLogin(form,afterSend) {
-        console.log(form)
         websocket.send(JSON.stringify({
             username:form.username,
             password:form.password,
@@ -89,14 +91,17 @@ function AdminSide() {
             var data = event.data
             data = JSON.parse(data)
             if (data.success) {
-                setAdmin([data.token,form.username])
+                setAdmin(form.username)
+                setMessageListCustomers(data.messageListCustomers)
             }
             else afterSend()
         }
     }
-    console.log("admin:",admin)
+    console.log(messageListCustomers)
     return (
-        (admin == null) ? <Login send={sendLogin} /> :
+        (loading)
+        ? <div style={{height:"100vh"}}><Loading /></div>
+        : ((admin == null) ? <Login send={sendLogin} /> :
         <div className="row" style={{height:"100vh"}}>
             <div className="col-3">
                 <CustomerList customerSelected={customerSelected} customerSelect={customerSelect} messageListCustomers={messageListCustomers} />
@@ -107,7 +112,7 @@ function AdminSide() {
                     : ""
                 }
             </div>
-        </div>      
+        </div>     ) 
     )
 }
 

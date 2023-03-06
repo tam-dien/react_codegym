@@ -12,6 +12,10 @@
     border-radius: 10px;
 }
 
+.customer-box.deactivate {
+    background-color: rgb(239, 239, 239);
+}
+
 .customer-box.active {
     border: 3px solid rgb(129, 129, 129);
 }

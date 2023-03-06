@@ -10,7 +10,7 @@ function Loading(props) {
                 return
             }
             setDot(dot+".")
-        },1000)
+        },500)
         return () => clearInterval(interval)
     })
     const [ dot, setDot ] = useState(".")

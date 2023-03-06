@@ -20,13 +20,13 @@ async def handleClient(websocket,ws_id):
         for i in CONNECTIONS_client:
             if i[1] == websocket:
                 i[0].activate = False
-                i[0].save()
+                await sync_to_async(i[0].save)()
                 CONNECTIONS_client.remove(i)
                 return
         return
     data = json.loads(data)
-    cover = Coversation(mess=data['mess'],client=ws_id,sender=data['sender'])
-    cover.save()
+    cover = Coversation(mess=data['mess'],client_id=ws_id,sender=None)
+    await sync_to_async(cover.save)()
     mess_id = cover.id
     await websocket.send(json.dumps({
         "type":"response",
@@ -72,9 +72,10 @@ async def handleAdmin(websocket,username):
             break
 
 async def server(websocket):
-    global sender
-    sender += 1
-    data = await websocket.recv()
+    try:
+        data = await websocket.recv()
+    except websockets.exceptions.ConnectionClosed:
+        return
     data = json.loads(data)
     if data["type"] == "client":
         c = Client()
@@ -87,7 +88,7 @@ async def server(websocket):
             await ws_ad[1].send(json.dumps({
                 "new_customer":True,
                 "id":c.id,
-                "time":c.client_id.timestamp()*1000,
+                "client_id":c.client_id.timestamp()*1000,
             })) 
         while True:
             await handleClient(websocket,c.id)
@@ -98,17 +99,36 @@ async def server(websocket):
             except websockets.exceptions.ConnectionClosed:
                 return
             data = json.loads(data)
-            user = await sync_to_async(lambda :authenticate(username=data['username'], password=data['password']))()
+            user = await sync_to_async(authenticate)(username=data['username'], password=data['password'])
             if user:
+                client = Client.objects.all().order_by("-activate","-id").prefetch_related("coversation_set__sender")[:10]
+                client = await sync_to_async(list)(client)
+                MessageListCustomers = []
+                for c in client:
+                    MessageList = []
+                    for m in c.coversation_set.all():
+                        MessageList.append({
+                            "id":m.id,
+                            "mess":m.mess,
+                            "sender": 1 if m.sender == None else m.sender.last_name + " " + m.sender.first_name,
+                        })
+                    else:
+                        if c.activate==False:
+                            break
+                    MessageListCustomers.append({
+                        "id":c.id,
+                        "client_id":c.client_id.timestamp()*1000,
+                        "activate":c.activate,
+                        "messageList": MessageList,
+                    })
                 await websocket.send(json.dumps({
                     "success":True,
-                    "token":"bolumbola"
+                    "messageListCustomers":MessageListCustomers,
                 }))
                 break
-            else:
-                await websocket.send(json.dumps({
-                    "success":False,
-                }))
+            await websocket.send(json.dumps({
+                "success":False,
+            }))
         CONNECTIONS_admin.append([data["username"],websocket])
         while True:
             await handleAdmin(websocket,data["username"])

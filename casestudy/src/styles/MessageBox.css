@@ -38,3 +38,10 @@
 .TypeMessage {
     margin-top: 10px;
 }
+
+.sender {
+    display: block;
+    text-align: right;
+    font-style: italic;
+    color: silver;
+}
