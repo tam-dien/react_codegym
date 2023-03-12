@@ -4,7 +4,6 @@ import "../styles/Loading.css"
 function Loading(props) {
     useEffect(()=>{
         const interval = setInterval(()=>{
-            console.log("run loading")
             if (dot.length == 3) {
                 setDot(".")
                 return

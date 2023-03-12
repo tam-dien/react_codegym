@@ -3,57 +3,71 @@ import { useEffect, useState } from "react"
 import MessageBox from "./MessageBox"
 import { WebSocket_URL } from "../CONST"
 import Loading from "./Loading"
-
-var websocket = null
-var id_client = null
-var sender = null
+import SendMailForm from "./SendMailForm"
 
 function CustomerSide() {
     const [ messageList, setMessageList ] = useState([])
     const [ idClient, setIdClient ] = useState(null)
-    if (id_client) websocket.onmessage = (event) => {
+    const [ websocket, setWebsocket ] = useState(null)
+    const [ sendMail, setSendMail ] = useState(false)
+    if (websocket) websocket.onmessage = (event) => {
         var data = event.data
         data = JSON.parse(data)
+        var sender = 1
+        if (data.type == "first") {
+            setIdClient(data.id)
+            return
+        }
+        if (data.type == "second") {
+            setSendMail(true)
+            return
+        }
+        if (data.type == "response") {
+            sender = 0
+            delete data.type
+        }
         const newMessageList = [...messageList]
-        newMessageList.push({...data,sender:1})
+        newMessageList.push({...data,sender:sender})
         setMessageList(newMessageList)
     }
+    function connectWebsocket() {
+        console.log("cố co nét nè")
+        const new_websocket = new WebSocket(WebSocket_URL)
+        new_websocket.onopen = (event) => {
+            console.log("kết nối")
+            new_websocket.send(JSON.stringify({
+                type:"client",
+            }))
+        }
+        new_websocket.onerror = (event) => {
+            console.log("connect lỗi")
+            connectWebsocket()
+        }
+        setWebsocket(new_websocket)
+    }
+    // console.log(websocket)
     useEffect(()=>{
-        const try_connect = setInterval(()=>{
-            if (!websocket || websocket.readyState == 0) {
-                websocket = new WebSocket(WebSocket_URL)
-                websocket.onopen = (event) => {
-                    clearInterval(try_connect)
-                    websocket.send(JSON.stringify({
-                        type:"client",
-                    }))
-                    websocket.onmessage = (event) => {
-                        var data = event.data
-                        data = JSON.parse(data)
-                        setIdClient(data.id)
-                    }
-                }
-            }
-        },1000)
+        console.log("chạy ịt fét nè")
+        connectWebsocket()
     },[])
     function send(data) {
         websocket.send(JSON.stringify({
             mess: data,
         }))
-        const newMessageList = [...messageList]
-        newMessageList.push({
-            id:Math.random()*10000,
-            mess:  data,
-            sender: 0,
-        })
-        setMessageList(newMessageList)
     }
-    console.log(idClient)
+    function sendMailFunc(form) {
+        const newForm = {...form}
+        newForm.sendmail = true
+        websocket.send(JSON.stringify(newForm))
+    }
+    // console.log(idClient)
+    // console.log(messageList)
     return (
         <div style={{height:"100vh"}}>
-            {( idClient == null ) 
+            {((sendMail) ? <SendMailForm send={sendMailFunc} /> 
+            : ( idClient == null ) 
             ? <Loading />
-            : <MessageBox message_list={messageList} send={send} />}
+            : <MessageBox message_list={messageList} send={send} />)}
         </div>
     )
 }
